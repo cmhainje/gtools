@@ -177,9 +177,14 @@ class HaloFinder():
         """
         return lambda r : (const.G * integral(r) + phi_0).to(u.km**2 / u.s**2)
 
-    def unbinding_step(self):
+    def unbinding_step(self, verbose=True):
         """
         Helper function which performs a single step of the unbinding algorithm.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            If True, prints the number of particles cut on every iteration.
 
         Returns
         -------
@@ -214,15 +219,21 @@ class HaloFinder():
         self.bound[self.bound] &= ~escaping
         is_stable = np.count_nonzero(escaping) == 0
 
-        print(f'cut {n_init} down to {np.count_nonzero(self.bound)}')
+        if verbose:
+            print(f'cut {n_init} down to {np.count_nonzero(self.bound)}')
         return is_stable or np.count_nonzero(self.bound) <= 1
 
-    def unbind(self):
+    def unbind(self, verbose=False):
         """
         Performs the unbinding procedure until stability is reached.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            If True, prints the number of particles cut on every iteration.
         """
-        is_stable = self.unbinding_step()
+        is_stable = self.unbinding_step(verbose=verbose)
         while not is_stable:
-            is_stable = self.unbinding_step()
+            is_stable = self.unbinding_step(verbose=verbose)
 
 
