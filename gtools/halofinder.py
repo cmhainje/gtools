@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import astropy.cosmology as cosmo
 import astropy.units as u
 import astropy.constants as const
@@ -7,7 +6,9 @@ import scipy.integrate
 import scipy.interpolate
 
 class HaloFinder():
-    def __init__(self, masses, positions, velocities, init_bound=None, cosmology=cosmo.Planck13, redshift=0, overdensity=200):
+    def __init__(self, masses, positions, velocities, 
+        init_bound=None, cosmology=cosmo.Planck13, redshift=0, overdensity=200
+    ) -> None:
         """
         Instantiates a HaloFinder object.
 
