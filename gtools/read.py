@@ -8,6 +8,29 @@ import gtools as gt
 
 class Reader():
     def __init__(self, dirname: str, particle_types: dict, times) -> None:
+        """Instantiates the reader object.
+
+        Parameters
+        ----------
+        dirname : str
+            Name of the directory containing the GIZMO snapshots.
+        particle_types : dict
+            A dict describing the types of particles in the snapshots. The keys
+            of the dict will be the names of the particle types; any names are
+            allowed. The values of the dict must be dicts themselves; one
+            associated with each particle type.  Every particle type's dict must
+            contain the field 'type' containing the name of the GIZMO particle
+            type associated with the particles.  (e.g. 'PartType2' for stars).
+            It must also contain either the 'number' or the 'mass' of the
+            particle type (or both). If there is more than one particle type
+            with the same number, mass is required to disambiguate. If there is
+            more than one particle type with the same mass, number is required
+            to disambiguate. Behavior is undefined if more than one particle
+            type has the same number and mass.
+        times : array_like
+            An array containing the times associated with each snapshot.
+        """
+
         self.dirname = dirname
         self.times = np.array(times)
         self._validate_particle_types(particle_types)
@@ -16,12 +39,38 @@ class Reader():
         self._compute_part_type_masks()
 
     def _validate_particle_types(self, particle_types) -> None:
-        # part_types is of the following form
-        # PartType1, number[, mass]
-        # part_types['mw_dark']  = {'type': 'PartType1', 'number': 100000, 'mass': 200}
-        # part_types['mw_star']  = {'type': 'PartType2', 'number':  10000, 'mass': 100}
-        # part_types['sgr_dark'] = {'type': 'PartType1', 'number':   1000, 'mass':  50}
-        # part_types['sgr_star'] = {'type': 'PartType2', 'number':    100, 'mass':  10}
+        """Helper method to validate the value passed to the `particle_types`
+        argument of the instantiator.
+
+        Parameters
+        ----------
+        particle_types : dict
+            A dict of the particle types. The keys of the dict will be the names
+            of the particle types; any names are allowed. The values of the dict
+            must be dicts themselves; one associated with each particle type.
+            Every particle type's dict must contain the field 'type' containing
+            the name of the GIZMO particle type associated with the particles.
+            (e.g. 'PartType2' for stars). It must also contain either the
+            'number' or the 'mass' of the particle type (or both). If there is
+            more than one particle type with the same number, mass is required
+            to disambiguate. If there is more than one particle type with the
+            same mass, number is required to disambiguate. Behavior is undefined
+            if more than one particle type has the same number and mass.
+
+        Raises
+        ------
+        ValueError
+            When the dict for any particle type does not have a 'type' key.
+        ValueError
+            When the dict for any particle type does not have both 'mass' and
+            'number'.
+        ValueError
+            When the dict contains more than one particle type with same number
+            and no mass information.
+        ValueError
+            When the dict contains more than one particle type with the same
+            mass and no number information.
+        """
 
         numbers, masses = [], []
 
@@ -55,6 +104,13 @@ class Reader():
                                  'number.')
 
     def _open_snapshots(self):
+        """Private method to populate the snapshots attribute.
+
+        Opens h5py File objects for each snapshot. Warns the user if any are
+        unable to be opened. The File objects are stored in the snapshots
+        attribute.
+        """
+
         # opens h5py Files for each snapshot
         filename_prefix = os.path.join(self.dirname, 'snapshot_')
         snapshot_names = glob.glob(f'{filename_prefix}*.hdf5')
@@ -78,6 +134,14 @@ class Reader():
             self.snapshots.append(f)
 
     def _compute_part_type_masks(self) -> None:
+        """Private method to populate the masks attribute.
+
+        For the first snapshot, creates boolean masks that identify which
+        particles correspond to each particle type. These masks correspond to
+        the particles _sorted by their IDs_ so that one mask can be used for
+        every snapshot.
+        """
+
         # computes masks for each particle type
         first_snap = self.snapshots[0]
         self.masks = dict()
@@ -95,6 +159,28 @@ class Reader():
             self.masks[part_type] = mask
 
     def get_snap(self, index):
+        """Returns the h5py File object for the specified snapshot.
+
+        Parameters
+        ----------
+        index : int
+            The index of the snapshot.
+
+        Returns
+        -------
+        h5py.File
+            The h5py File object for the specified snapshot.
+
+        Raises
+        ------
+        ValueError
+            When the index is negative or larger than the number of snapshots
+            that were found.
+        ValueError
+            When the index corresponds to a snapshot that the reader was unable
+            to open.
+        """
+
         # returns the snapshot with the given index
         if index < 0 or index >= len(self.snapshots):
             raise ValueError('Index out of bounds.')
@@ -105,17 +191,44 @@ class Reader():
         return self.snapshots[index]
 
     def get_time(self, index):
-        # gets the time corresponding to the given index
+        """Returns the time corresponding to the specified snapshot.
+
+        Parameters
+        ----------
+        index : int
+            The index of the snapshot.
+
+        Returns
+        -------
+        float
+            The times corresponding to the given snapshot.
+        """
+
         return self.times[index]
 
     def get_mass(self, index, part_type):
-        # gets the masses for the specified snapshot index and particle type
+        """Returns the masses of the specified particles in the specified
+        snapshot.
+
+        Parameters
+        ----------
+        index : int
+            The index of the snapshot.
+        part_type : str
+            The key to the part_types dict specifying the desired particle type.
+
+        Returns
+        -------
+        array_like
+            The (N,) array containing the masses.
+        """
+
         snap = self.get_snap(index)
         mask = self.masks[part_type]
-        type = self.part_types[part_type]['type']
+        ptype = self.part_types[part_type]['type']
 
-        ids = snap[type]['ParticleIDs'][()]
-        masses = snap[type]['Masses'][()]
+        ids = snap[ptype]['ParticleIDs'][()]
+        masses = snap[ptype]['Masses'][()]
 
         # sort positions by ID before applying mask
         sorted_idx = np.argsort(ids)
@@ -124,7 +237,29 @@ class Reader():
         return masses * 1e10
 
     def get_pos(self, index, part_type, transform_cyl=False, transform_sph=False):
-        # gets the positions for the specified snapshot index and particle type
+        """Returns the positions of the specified particles in the specified
+        snapshot.
+
+        Parameters
+        ----------
+        index : int
+            The index of the snapshot.
+        part_type : str
+            The key to the part_types dict specifying the desired particle type.
+        transform_cyl : bool, optional
+            If True, transforms the positions into cylindrical coordinates
+            before returning. Defaults to False.
+        transform_sph : bool, optional
+            If True, transforms the positions into spherical coordinates before
+            returning. Defaults to False.
+
+        Returns
+        -------
+        array_like
+            The (N,3) array containing the positions in the chosen coordinate
+            system.
+        """
+
         snap = self.get_snap(index)
         mask = self.masks[part_type]
         ptype = self.part_types[part_type]['type']
@@ -146,7 +281,29 @@ class Reader():
         return pos
 
     def get_vel(self, index, part_type, transform_cyl=False, transform_sph=False):
-        # gets the velocities for the specified snapshot index and particle type
+        """Returns the velocities of the specified particles in the specified
+        snapshot.
+
+        Parameters
+        ----------
+        index : int
+            The index of the snapshot.
+        part_type : str
+            The key to the part_types dict specifying the desired particle type.
+        transform_cyl : bool, optional
+            If True, transforms the velocities into cylindrical coordinates
+            before returning. Defaults to False.
+        transform_sph : bool, optional
+            If True, transforms the velocities into spherical coordinates before
+            returning. Defaults to False.
+
+        Returns
+        -------
+        array_like
+            The (N,3) array containing the velocities in the chosen coordinate
+            system.
+        """
+
         snap = self.get_snap(index)
         mask = self.masks[part_type]
         ptype = self.part_types[part_type]['type']
