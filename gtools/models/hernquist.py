@@ -13,10 +13,34 @@ class Profile():
         self.r_s = r_s
         
     def density(self, r):
+        """Returns the density at the given radius.
+
+        Parameters
+        ----------
+        r : Quantity ['length']
+            The radius at which to compute the density.
+
+        Returns
+        -------
+        Quantity ['density']
+            The computed density.
+        """
         x = r / self.r_s
         return self.rho_0 / (x * (1 + x)**3)
 
     def enclosed_mass(self, r):
+        """Returns the enclosed mass at the given radius.
+
+        Parameters
+        ----------
+        r : Quantity ['length']
+            The radius at which to compute the enclosed mass.
+
+        Returns
+        -------
+        Quantity ['mass']
+            The compute enclosed mass.
+        """
         x = r / self.r_s
         return 2 * np.pi * self.rho_0 * self.r_s**3 * x**2 / (1 + x)**2
 
@@ -81,24 +105,83 @@ class Hernquist(Params):
         self.profile = Profile(self.rho_0, self.r_s)
 
     def density(self, r):
+        """Returns the density at the given radius.
+
+        Parameters
+        ----------
+        r : Quantity ['length']
+            The radius at which to compute the density.
+
+        Returns
+        -------
+        Quantity ['density']
+            The computed density.
+        """
         return self.profile.density(r)
 
     def enclosed_mass(self, r):
+        """Returns the enclosed mass at the given radius.
+
+        Parameters
+        ----------
+        r : Quantity ['length']
+            The radius at which to compute the enclosed mass.
+
+        Returns
+        -------
+        Quantity ['mass']
+            The compute enclosed mass.
+        """
         return self.profile.enclosed_mass(r)
 
     def virial_mass(self):
+        """Returns the virial mass of the Hernquist object.
+
+        Returns
+        -------
+        Quantity ['mass']
+            The virial mass.
+        """
         return self.M_vir
 
     def virial_radius(self):
+        """Returns the virial radius of the Hernquist object.
+
+        Returns
+        -------
+        Quantity ['length']
+            The virial radius.
+        """
         return self.r_vir
 
     def virial_velocity(self):
+        """Returns the virial velocity of the Hernquist object.
+
+        Returns
+        -------
+        Quantity ['velocity']
+            The virial velocity.
+        """
         return self.v_vir
 
     def total_mass(self):
+        """Returns the total mass of the Hernquist object.
+
+        Returns
+        -------
+        Quantity ['mass']
+            The total mass.
+        """
         return self.M_tot
 
     def scale_radius(self):
+        """Returns the scale radius of the Hernquist object.
+
+        Returns
+        -------
+        Quantity ['kpc']
+            The scale radius.
+        """
         return self.r_s
 
 
