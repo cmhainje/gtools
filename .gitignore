@@ -1,5 +1,5 @@
-.vscode/*
+.vscode/
+gtools.egg-info/
 
-__pycache__/*
-*/__pycache__/*
-gtools.egg-info
+**/__pycache__/
+**/*.pyc
