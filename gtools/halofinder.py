@@ -5,6 +5,7 @@ import astropy.constants as const
 import scipy.integrate
 import scipy.interpolate
 
+
 class HaloFinder():
     def __init__(self, masses, positions, velocities, 
         init_bound=None, cosmology=cosmo.Planck13, redshift=0, overdensity=200
@@ -245,4 +246,24 @@ class HaloFinder():
         while not is_stable:
             is_stable = self.unbinding_step(verbose=verbose)
 
+
+def unbind(m, part_type, continuous=True, verbose=True):
+    if verbose:
+        print("index\tGyr\tbound particles")
+
+    bounds = [np.ones(len(m.get_mass(0, part_type)), dtype=bool)]
+
+    for i in range(len(m.snapshots)):
+        pos  = m.get_pos(i, 'sgr_dark')
+        vel  = m.get_vel(i, 'sgr_dark')
+        mass = m.get_mass(i, 'sgr_dark')
+
+        hf = HaloFinder(mass * u.M_sun, pos * u.kpc, vel * u.km/u.s, init_bound=bounds[-1] if continuous else None)
+        hf.unbind()
+        bounds.append(hf.unsort_bound())
+        
+        if verbose:
+            print(f"{i:2d}\t{m.get_time(i):.3f}\t{np.count_nonzero(bounds[-1])}")
+
+    return bounds
 
