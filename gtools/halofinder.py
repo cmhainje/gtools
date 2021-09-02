@@ -111,13 +111,17 @@ class HaloFinder():
         number
             The virial mass.
         """
-        M_encl = np.cumsum(self.M[self.bound])
-        coeff = 0.5 * self.hubble**2 / const.G * self.overdensity
-        distance = np.abs(M_encl / self.r[self.bound]**3 - coeff)
-        idx = np.argmin(distance)
+        # M_encl = np.cumsum(self.M[self.bound])
+        # coeff = 0.5 * self.hubble**2 / const.G * self.overdensity
+        # distance = np.abs(M_encl / self.r[self.bound]**3 - coeff)
+        # idx = np.argmin(distance)
 
-        r_vir = (self.r[self.bound])[idx]
-        M_vir = M_encl[idx]
+        # r_vir = (self.r[self.bound])[idx]
+        # M_vir = M_encl[idx]
+        # return r_vir, M_vir
+
+        M_vir = np.sum(self.M)
+        r_vir = 1e3 * u.kpc
         return r_vir, M_vir
 
     def compute_integral(self):
@@ -132,9 +136,13 @@ class HaloFinder():
             A function which takes a single argument, `r`, and returns the value
             of the integral from 0 to `r` of M(<r')/r'^2 at that radius.
         """
-        M_encl = np.cumsum(self.M[self.bound])
-        integral = scipy.integrate.cumtrapz(M_encl / self.r[self.bound]**2)
-        bin_middles = 0.5 * ((self.r[self.bound])[1:] + (self.r[self.bound])[:-1])
+        # M_encl = np.cumsum(self.M[self.bound])
+        # integral = scipy.integrate.cumtrapz(M_encl / self.r[self.bound]**2)
+        # bin_middles = 0.5 * ((self.r[self.bound])[1:] + (self.r[self.bound])[:-1])
+
+        M_encl = np.cumsum(self.M)
+        integral = scipy.integrate.cumtrapz(M_encl / self.r**2)
+        bin_middles = 0.5 * ((self.r)[1:] + (self.r)[:-1])
         interp = scipy.interpolate.interp1d(bin_middles, integral, fill_value='extrapolate')
         return lambda r: interp(r) * u.M_sun / u.kpc
 
