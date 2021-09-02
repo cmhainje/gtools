@@ -35,8 +35,11 @@ class Reader():
         self.times = np.array(times)
         self._validate_particle_types(particle_types)
         self.part_types = particle_types
-        self._open_snapshots()
-        self._compute_part_type_masks()
+        try:
+            self._open_snapshots()
+            self._compute_part_type_masks()
+        except:
+            pass
 
     def _validate_particle_types(self, particle_types) -> None:
         """Helper method to validate the value passed to the `particle_types`
@@ -103,7 +106,7 @@ class Reader():
                                  'same mass, requires disambiguation by '
                                  'number.')
 
-    def _open_snapshots(self):
+    def _open_snapshots(self, prefix='snapshot_'):
         """Private method to populate the snapshots attribute.
 
         Opens h5py File objects for each snapshot. Warns the user if any are
@@ -112,7 +115,7 @@ class Reader():
         """
 
         # opens h5py Files for each snapshot
-        filename_prefix = os.path.join(self.dirname, 'snapshot_')
+        filename_prefix = os.path.join(self.dirname, prefix)
         snapshot_names = glob.glob(f'{filename_prefix}*.hdf5')
         if len(snapshot_names) == 0:
             raise ValueError('No snapshots found in given directory.')
@@ -205,6 +208,18 @@ class Reader():
         """
 
         return self.times[index]
+
+    def get_ids(self, index, part_type):
+        snap = self.get_snap(index)
+        mask = self.masks[part_type]
+        ptype = self.part_types[part_type]['type']
+        ids = snap[ptype]['ParticleIDs'][()]
+
+        # sort IDs before applying mask
+        sorted_idx = np.argsort(ids)
+        ids = ids[sorted_idx]
+        ids = ids[mask]
+        return ids
 
     def get_mass(self, index, part_type):
         """Returns the masses of the specified particles in the specified
