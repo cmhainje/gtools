@@ -251,7 +251,7 @@ def unbind(m, part_type, continuous=True, verbose=True):
     if verbose:
         print("index\tGyr\tbound particles")
 
-    bounds = [np.ones(len(m.get_mass(0, part_type)), dtype=bool)]
+    bounds = [None]
 
     for i in range(len(m.snapshots)):
         pos  = m.get_pos(i, 'sgr_dark')
@@ -265,5 +265,6 @@ def unbind(m, part_type, continuous=True, verbose=True):
         if verbose:
             print(f"{i:2d}\t{m.get_time(i):.3f}\t{np.count_nonzero(bounds[-1])}")
 
+    del bounds[0]
     return bounds
 
