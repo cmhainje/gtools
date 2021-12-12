@@ -161,6 +161,25 @@ class Reader():
                 mask = (masses == mass)
             self.masks[part_type] = mask
 
+    def unsort(self, x, index, part_type):
+        """Re-orders array x to match raw particle ID order."""
+        # get sort indices
+        snap = self.get_snap(index)
+        ptype = self.part_types[part_type]['type']
+        ids = snap[ptype]['ParticleIDs'][()]
+        sort_idx = np.argsort(ids)
+
+        # get unsort indices
+        unsort_idx = np.argsort(sort_idx)
+
+        # apply mask to unsort indices
+        mask = self.masks[part_type]
+        unsort_mask = mask[unsort_idx]
+        unsort_idx = unsort_idx[unsort_mask]
+
+        # use masked unsort indices to unsort x
+        return x[unsort_idx]
+
     def get_snap(self, index):
         """Returns the h5py File object for the specified snapshot.
 
@@ -209,19 +228,23 @@ class Reader():
 
         return self.times[index]
 
-    def get_ids(self, index, part_type):
+    def get_ids(self, index, part_type, sorted_order=True):
         snap = self.get_snap(index)
         mask = self.masks[part_type]
         ptype = self.part_types[part_type]['type']
         ids = snap[ptype]['ParticleIDs'][()]
 
-        # sort IDs before applying mask
-        sorted_idx = np.argsort(ids)
-        ids = ids[sorted_idx]
-        ids = ids[mask]
+        if sorted_order:
+            # sort IDs before applying mask
+            sorted_idx = np.argsort(ids)
+            ids = ids[sorted_idx]
+            ids = ids[mask]
+        else:
+            mask = self.unsort(mask, index, part_type)
+            ids = ids[mask]
         return ids
 
-    def get_mass(self, index, part_type):
+    def get_mass(self, index, part_type, sorted_order=True):
         """Returns the masses of the specified particles in the specified
         snapshot.
 
@@ -245,13 +268,17 @@ class Reader():
         ids = snap[ptype]['ParticleIDs'][()]
         masses = snap[ptype]['Masses'][()]
 
-        # sort positions by ID before applying mask
-        sorted_idx = np.argsort(ids)
-        masses = masses[sorted_idx]
-        masses = masses[mask]
+        if sorted_order:
+            # sort positions by ID before applying mask
+            sorted_idx = np.argsort(ids)
+            masses = masses[sorted_idx]
+            masses = masses[mask]
+        else:
+            mask = self.unsort(mask, index, part_type)
+            masses = masses[mask]
         return masses * 1e10
 
-    def get_pos(self, index, part_type, transform_cyl=False, transform_sph=False):
+    def get_pos(self, index, part_type, transform_cyl=False, transform_sph=False, sorted_order=True):
         """Returns the positions of the specified particles in the specified
         snapshot.
 
@@ -282,10 +309,14 @@ class Reader():
         ids = snap[ptype]['ParticleIDs'][()]
         pos = snap[ptype]['Coordinates'][()]
 
-        # sort positions by ID before applying mask
-        sorted_idx = np.argsort(ids)
-        pos = pos[sorted_idx,:]
-        pos = pos[mask]
+        if sorted_order:
+            # sort positions by ID before applying mask
+            sorted_idx = np.argsort(ids)
+            pos = pos[sorted_idx]
+            pos = pos[mask]
+        else:
+            mask = self.unsort(mask, index, part_type)
+            pos = pos[mask]
 
         if transform_cyl:
             pos = gt.pos_cart_to_cyl(pos)
@@ -295,7 +326,7 @@ class Reader():
 
         return pos
 
-    def get_vel(self, index, part_type, transform_cyl=False, transform_sph=False):
+    def get_vel(self, index, part_type, transform_cyl=False, transform_sph=False, sorted_order=True):
         """Returns the velocities of the specified particles in the specified
         snapshot.
 
@@ -326,10 +357,14 @@ class Reader():
         ids = snap[ptype]['ParticleIDs'][()]
         vel = snap[ptype]['Velocities'][()]
 
-        # sort positions by ID before applying mask
-        sorted_idx = np.argsort(ids)
-        vel = vel[sorted_idx,:]
-        vel = vel[mask,:]
+        if sorted_order:
+            # sort positions by ID before applying mask
+            sorted_idx = np.argsort(ids)
+            vel = vel[sorted_idx]
+            vel = vel[mask]
+        else:
+            mask = self.unsort(mask, index, part_type)
+            vel = vel[mask]
 
         if transform_cyl:
             pos = self.get_pos(index, part_type)
