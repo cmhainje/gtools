@@ -60,16 +60,16 @@ def main():
     print(f"  Number of bulge particles: {n_parts['n_bulge']}")
 
     # move each galaxy
-    pos = args.pos
-    for _ in range(3 * len(gals) - len(pos)):
-        pos.append(0)
-    vel = args.vel
-    for _ in range(3 * len(gals) - len(vel)):
-        vel.append(0)
+    des_pos = args.pos
+    for _ in range(3 * len(gals) - len(des_pos)):
+        des_pos.append(0)
+    des_vel = args.vel
+    for _ in range(3 * len(gals) - len(des_vel)):
+        des_vel.append(0)
     moveds = []
     for i, gal in enumerate(gals):
-        pos = np.array(args.pos[i * 3 : (i + 1) * 3])
-        vel = np.array(args.vel[i * 3 : (i + 1) * 3])
+        pos = np.array(des_pos[i * 3 : (i + 1) * 3])
+        vel = np.array(des_vel[i * 3 : (i + 1) * 3])
         moved = w.move(gal, pos, vel)
         print(f"Galaxy {i+1} moved to...")
         print(f" ..position {pos[0]:.1f}, {pos[1]:.1f}, {pos[2]:.1f}.")
