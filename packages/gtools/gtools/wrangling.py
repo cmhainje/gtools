@@ -2,6 +2,64 @@ import numpy as np
 import h5py
 
 
+def find(f):
+    """Finds the snapshot at the given path.
+
+    If given path is a snapshot itself, returns the given argument. If the given
+    path is a directory, returns the last snapshot found either in the directory
+    itself or in a subdirectory called "output".
+
+    Parameters
+    ----------
+    f : str
+        Given snapshot file/directory.
+
+    Returns
+    -------
+    str
+        Actual snapshot filepath.
+
+    Raises
+    ------
+    ValueError
+        If no snapshot can be found.
+    """
+
+    from glob import glob
+    from os.path import join, isfile, isdir
+
+    def _404():
+        raise ValueError(f"No snapshot found for input {f}.")
+
+    if isfile(f):
+        if f.lower().endswith(".hdf5"):
+            return f
+        else:
+            _404()
+
+    elif isdir(f):
+
+        def _strip(x):
+            dot = x.rfind(".")
+            und = x[:dot].rfind("_")
+            return int(x[und + 1 : dot])
+
+        # look in given directory
+        cur = glob(join(f, "snapshot_*.hdf5"))
+        if len(cur) > 0:
+            return sorted(cur, reverse=True, key=_strip)[0]
+
+        # look in subdirectory "output"
+        out = glob(join(f, "output", "snapshot_*.hdf5"))
+        if len(out) > 0:
+            return sorted(out, reverse=True, key=_strip)[0]
+
+        _404()
+
+    else:
+        _404()
+
+
 def make_hdf5(filename, n_halo=0, n_disk=0, n_bulge=0, filemode="w"):
     """Make a new HDF5 file at the given filename with header and dummy
     values set up for GIZMO.
