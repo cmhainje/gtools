@@ -39,7 +39,7 @@ def main():
     n_disk = len(gal["PartType2"]["ParticleIDs"]) if "PartType2" in gal else 0
     n_bulge = len(gal["PartType3"]["ParticleIDs"]) if "PartType3" in gal else 0
     out = w.make_hdf5(args.output, n_halo=n_halo, n_disk=n_disk, n_bulge=n_bulge)
-    print(f"New galaxy file made at {args.output}.")
+    print(f"New, empty galaxy file made at {args.output}.")
     print(f"  Number of halo particles:  {n_halo}")
     print(f"  Number of disk particles:  {n_disk}")
     print(f"  Number of bulge particles: {n_bulge}")
