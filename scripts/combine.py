@@ -40,7 +40,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    fs = [w.find(i) for i in args.input]
+    fs = [w.find(i) for i in args.inputs]
     gals = [h5py.File(f, "r") for f in fs]
     print(f"Snapshots found and read...")
     for f in fs:
