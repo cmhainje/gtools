@@ -86,7 +86,7 @@ AGS_DesNumNgb              32      % Neighbor number for calculating interaction
 Softening_Type0     0.0      % element/particle type 0 [gas; this parameter can also be named 'SofteningGas']
 Softening_Type1     0.100    % element type 1 [e.g. high-res dark matter; can also use 'SofteningHalo' here]
 Softening_Type2     0.050    % element type 2 [e.g. dummy collisionless; alt. 'SofteningDisk']
-Softening_Type3     0.0      % element type 3 [e.g. grains/PIC particles; alt. 'SofteningBulge']
+Softening_Type3     0.050    % element type 3 [e.g. grains/PIC particles; alt. 'SofteningBulge']
 Softening_Type4     0.0      % element type 4 [e.g. stars, in galaxy sims; alt. 'SofteningStars']
 Softening_Type5     0.0      % element type 5 [e.g. black holes/sinks; alt. 'SofteningBndry']
 %
