@@ -1,3 +1,4 @@
+from email.policy import default
 import numpy as np
 import h5py
 import os
@@ -6,7 +7,8 @@ import warnings
 
 import gtools as gt
 
-class Reader():
+
+class Reader:
     def __init__(self, dirname: str, particle_types: dict, times) -> None:
         """Instantiates the reader object.
 
@@ -75,38 +77,47 @@ class Reader():
             mass and no number information.
         """
 
-        numbers, masses = [], []
+        from collections import defaultdict
 
-        for k, v in particle_types.items():
-            if not 'type' in v.keys():
+        numbers = defaultdict(list)
+        masses = defaultdict(list)
+
+        for v in particle_types.values():
+            if not "type" in v.keys():
                 raise ValueError("'type' is a required key for every type.")
 
-            if not 'mass' in v.keys() and not 'number' in v.keys():
+            if not "mass" in v.keys() and not "number" in v.keys():
                 raise ValueError("One of 'mass' and 'number' is required.")
 
-            if 'number' in v.keys():
-                numbers.append(v['number'])
-            if 'mass' in v.keys():
-                masses.append(v['mass'])
+            if "number" in v.keys():
+                numbers[v["type"]].append(v["number"])
+            if "mass" in v.keys():
+                masses[v["type"]].append(v["mass"])
 
-        numbers = np.array(numbers)
-        masses = np.array(masses)
+        # numbers = np.array(numbers)
+        # masses = np.array(masses)
 
         if len(masses) == 0:
-            _, counts = np.unique(numbers, return_counts=True)
-            if np.count_nonzero(counts > 1) > 0:
-                raise ValueError('More than one particle type with the '
-                                 'same number, requires disambiguation by '
-                                 'mass.')
+            for v in numbers:
+                _, counts = np.unique(v, return_counts=True)
+                if np.count_nonzero(counts > 1) > 0:
+                    raise ValueError(
+                        "More than one particle type with the "
+                        "same number, requires disambiguation by "
+                        "mass."
+                    )
 
         if len(numbers) == 0:
-            _, counts = np.unique(masses, return_counts=True)
-            if np.count_nonzero(counts > 1) > 0:
-                raise ValueError('More than one particle type with the '
-                                 'same mass, requires disambiguation by '
-                                 'number.')
+            for v in masses:
+                _, counts = np.unique(v, return_counts=True)
+                if np.count_nonzero(counts > 1) > 0:
+                    raise ValueError(
+                        "More than one particle type with the "
+                        "same mass, requires disambiguation by "
+                        "number."
+                    )
 
-    def _open_snapshots(self, prefix='snapshot_'):
+    def _open_snapshots(self, prefix="snapshot_"):
         """Private method to populate the snapshots attribute.
 
         Opens h5py File objects for each snapshot. Warns the user if any are
@@ -116,22 +127,24 @@ class Reader():
 
         # opens h5py Files for each snapshot
         filename_prefix = os.path.join(self.dirname, prefix)
-        snapshot_names = glob.glob(f'{filename_prefix}*.hdf5')
+        snapshot_names = glob.glob(f"{filename_prefix}*.hdf5")
         if len(snapshot_names) == 0:
-            raise ValueError('No snapshots found in given directory.')
+            raise ValueError("No snapshots found in given directory.")
 
-        to_index = lambda s: int(s.replace(filename_prefix, '')[:-5])
+        to_index = lambda s: int(s.replace(filename_prefix, "")[:-5])
         snapshot_names.sort(key=to_index)
 
         self.snapshots = []
         for snap in snapshot_names:
             try:
-                f = h5py.File(snap, 'r')
+                f = h5py.File(snap, "r")
 
             except:
-                warnings.warn(f'There was a problem opening snapshot '
-                              f'{to_index(snap)} at {snap}. '
-                               'Proceeding without this snapshot.')
+                warnings.warn(
+                    f"There was a problem opening snapshot "
+                    f"{to_index(snap)} at {snap}. "
+                    "Proceeding without this snapshot."
+                )
                 f = None
 
             self.snapshots.append(f)
@@ -149,24 +162,24 @@ class Reader():
         first_snap = self.snapshots[0]
         self.masks = dict()
         for part_type, info in self.part_types.items():
-            ids = first_snap[info['type']]['ParticleIDs'][()]
+            ids = first_snap[info["type"]]["ParticleIDs"][()]
             sort_idx = np.argsort(ids)
-            masses = first_snap[info['type']]['Masses'][()]
+            masses = first_snap[info["type"]]["Masses"][()]
             masses = masses[sort_idx]
-            if 'mass' in info.keys():
-                mask = (masses == info['mass'])
+            if "mass" in info.keys():
+                mask = masses == info["mass"]
             else:
                 unique, counts = np.unique(masses, return_counts=True)
-                mass = unique[np.nonzero(counts == info['number'])[0]]
-                mask = (masses == mass)
+                mass = unique[np.nonzero(counts == info["number"])[0]]
+                mask = masses == mass
             self.masks[part_type] = mask
 
     def unsort(self, x, index, part_type):
         """Re-orders array x to match raw particle ID order."""
         # get sort indices
         snap = self.get_snap(index)
-        ptype = self.part_types[part_type]['type']
-        ids = snap[ptype]['ParticleIDs'][()]
+        ptype = self.part_types[part_type]["type"]
+        ids = snap[ptype]["ParticleIDs"][()]
         sort_idx = np.argsort(ids)
 
         # get unsort indices
@@ -205,10 +218,10 @@ class Reader():
 
         # returns the snapshot with the given index
         if index < 0 or index >= len(self.snapshots):
-            raise ValueError('Index out of bounds.')
+            raise ValueError("Index out of bounds.")
 
         if self.snapshots[index] is None:
-            raise ValueError('No valid snapshot with this index.')
+            raise ValueError("No valid snapshot with this index.")
 
         return self.snapshots[index]
 
@@ -231,8 +244,8 @@ class Reader():
     def get_ids(self, index, part_type, sorted_order=True):
         snap = self.get_snap(index)
         mask = self.masks[part_type]
-        ptype = self.part_types[part_type]['type']
-        ids = snap[ptype]['ParticleIDs'][()]
+        ptype = self.part_types[part_type]["type"]
+        ids = snap[ptype]["ParticleIDs"][()]
 
         if sorted_order:
             # sort IDs before applying mask
@@ -263,10 +276,10 @@ class Reader():
 
         snap = self.get_snap(index)
         mask = self.masks[part_type]
-        ptype = self.part_types[part_type]['type']
+        ptype = self.part_types[part_type]["type"]
 
-        ids = snap[ptype]['ParticleIDs'][()]
-        masses = snap[ptype]['Masses'][()]
+        ids = snap[ptype]["ParticleIDs"][()]
+        masses = snap[ptype]["Masses"][()]
 
         if sorted_order:
             # sort positions by ID before applying mask
@@ -278,7 +291,14 @@ class Reader():
             masses = masses[mask]
         return masses * 1e10
 
-    def get_pos(self, index, part_type, transform_cyl=False, transform_sph=False, sorted_order=True):
+    def get_pos(
+        self,
+        index,
+        part_type,
+        transform_cyl=False,
+        transform_sph=False,
+        sorted_order=True,
+    ):
         """Returns the positions of the specified particles in the specified
         snapshot.
 
@@ -304,10 +324,10 @@ class Reader():
 
         snap = self.get_snap(index)
         mask = self.masks[part_type]
-        ptype = self.part_types[part_type]['type']
+        ptype = self.part_types[part_type]["type"]
 
-        ids = snap[ptype]['ParticleIDs'][()]
-        pos = snap[ptype]['Coordinates'][()]
+        ids = snap[ptype]["ParticleIDs"][()]
+        pos = snap[ptype]["Coordinates"][()]
 
         if sorted_order:
             # sort positions by ID before applying mask
@@ -326,7 +346,14 @@ class Reader():
 
         return pos
 
-    def get_vel(self, index, part_type, transform_cyl=False, transform_sph=False, sorted_order=True):
+    def get_vel(
+        self,
+        index,
+        part_type,
+        transform_cyl=False,
+        transform_sph=False,
+        sorted_order=True,
+    ):
         """Returns the velocities of the specified particles in the specified
         snapshot.
 
@@ -352,10 +379,10 @@ class Reader():
 
         snap = self.get_snap(index)
         mask = self.masks[part_type]
-        ptype = self.part_types[part_type]['type']
+        ptype = self.part_types[part_type]["type"]
 
-        ids = snap[ptype]['ParticleIDs'][()]
-        vel = snap[ptype]['Velocities'][()]
+        ids = snap[ptype]["ParticleIDs"][()]
+        vel = snap[ptype]["Velocities"][()]
 
         if sorted_order:
             # sort positions by ID before applying mask
@@ -375,4 +402,3 @@ class Reader():
             vel = gt.vel_cart_to_sph(vel, pos)
 
         return vel
-
