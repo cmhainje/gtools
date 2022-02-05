@@ -118,6 +118,28 @@ def make_hdf5(filename, n_halo=0, n_disk=0, n_bulge=0, filemode="w"):
     return f
 
 
+def truncate(g, r_trunc):
+
+    part_types = [k for k in g.keys() if "PartType" in k]
+
+    # compute center of mass
+    all_p = np.concatenate([g[p]["Coordinates"] for p in part_types])
+    all_m = np.concatenate([g[p]["Masses"] for p in part_types])
+    com = np.average(all_p, weights=all_m, axis=0)
+
+    out = dict()
+    for p in part_types:
+        mask = np.linalg.norm(g[p]["Coordinates"][()] - com, axis=1) < r_trunc
+        out[p] = {
+            "Coordinates": (g[p]["Coordinates"][()])[mask],
+            "Velocities": (g[p]["Velocities"][()])[mask],
+            "ParticleIDs": (g[p]["ParticleIDs"][()])[mask],
+            "Masses": (g[p]["Masses"][()])[mask],
+        }
+
+    return out
+
+
 def move(g, pos, vel):
     """Moves the given galaxy to the desired center-of-mass position and
     velocity.
