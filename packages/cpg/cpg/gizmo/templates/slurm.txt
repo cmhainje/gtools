@@ -11,6 +11,6 @@
 #SBATCH --mail-user=chainje@princeton.edu
 
 module purge
-module load openmpi/gcc/1.10.2/64 gsl/2.4 fftw/gcc/openmpi-1.10.2/3.3.4 hdf5/gcc/1.8.16
+module load openmpi/gcc/4.1.0 gsl/2.6 fftw/gcc/openmpi-4.1.0/3.3.9 hdf5/gcc/1.10.6
 srun {{ gizmopath }} {{ parampath }}
 
