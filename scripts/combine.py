@@ -74,14 +74,21 @@ def main():
     for i, gal in enumerate(gals):
         pos = np.array(des_pos[i * 3 : (i + 1) * 3])
         vel = np.array(des_vel[i * 3 : (i + 1) * 3])
-        moved = w.move(gal, pos, vel)
-        print(f"Galaxy {i+1} moved to...")
-        print(f" ..position {pos[0]:.1f}, {pos[1]:.1f}, {pos[2]:.1f}.")
-        print(f" ..velocity {vel[0]:.1f}, {vel[1]:.1f}, {vel[2]:.1f}.")
+        print(f"Galaxy {i+1}...")
 
         if des_rtrunc[i] != 0:
-            moved = w.truncate(gal, des_rtrunc[i])
-            print(f"Galaxy {i+1} truncated at a radius of {des_rtrunc[i]:.3f} kpc.")
+            gal = w.truncate(gal, des_rtrunc[i])
+            print(f" ..truncated at a radius of {des_rtrunc[i]:.3f} kpc")
+
+        moved = w.move(gal, pos, vel)
+        print(f" ..moved to...")
+        print(f"   ..position {pos[0]:.1f}, {pos[1]:.1f}, {pos[2]:.1f}.")
+        print(f"   ..velocity {vel[0]:.1f}, {vel[1]:.1f}, {vel[2]:.1f}.")
+
+        for j, name in enumerate(["halo", "disk", "bulge"]):
+            p = f"PartType{j+1}"
+            n_part = len(moved[p]["ParticleIDs"]) if p in moved else 0
+            print(f" ..number of {name} particles: {n_part}")
 
         moveds.append(moved)
 
