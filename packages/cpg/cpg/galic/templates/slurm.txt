@@ -13,5 +13,5 @@
 #SBATCH --error=slurm-%x-%j.out
 
 module purge
-module load openmpi/gcc/4.1.0 gsl/2.6 fftw/gcc/openmpi-4.1.0/3.3.9 hdf5/gcc/1.10.6
+module load openmpi/gcc/4.1.0 gsl/2.6 fftw/gcc/openmpi-4.1.0/3.3.9 hdf5/gcc/openmpi-4.1.0/1.10.6
 srun /home/chainje/GalIC/GalIC {{ parampath }}
