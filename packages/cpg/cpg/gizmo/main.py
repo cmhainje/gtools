@@ -9,6 +9,7 @@ def parse():
     ap.add_argument("--icpath", default="./ic")
     ap.add_argument("--output", default="./output")
     ap.add_argument("--simtime", default="10.0")
+    ap.add_argument("--snaptime", default="0.1")
     ap.add_argument("--dm_cross_section", default="0")
     ap.add_argument("--dm_velocity_scale", default="0")
     ap.add_argument("--name", default="sim")

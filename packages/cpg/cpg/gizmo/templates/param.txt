@@ -27,7 +27,7 @@ NumFilesWrittenInParallel   1   % must be < N_processors & power of 2 [Default=1
 
 %---- Output frequency
 TimeOfFirstSnapshot         0.0   % time (code units) of first snapshot
-TimeBetSnapshot             0.1
+TimeBetSnapshot             {{ snaptime }}
 TimeBetStatistics           0.05  % code time between additional statistics (e.g. energy) [Default=infinity]
 
 %---- CPU run-time and checkpointing time-limits

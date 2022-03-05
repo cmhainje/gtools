@@ -9,6 +9,7 @@ def parse():
     ap.add_argument("--icpath", default="./ic")
     ap.add_argument("--output", default="./output")
     ap.add_argument("--simtime", default="10.0")
+    ap.add_argument("--snaptime", default="0.1")
     ap.add_argument("--dm_cross_section", default="0")
     ap.add_argument("--dm_velocity_scale", default="0")
     args = ap.parse_args()
@@ -27,6 +28,7 @@ def write(args):
         icpath=args.icpath,
         output=args.output,
         time=args.simtime,
+        snaptime=args.snaptime,
         dm_cross_section=args.dm_cross_section,
         dm_velocity_scale=args.dm_velocity_scale,
     )
