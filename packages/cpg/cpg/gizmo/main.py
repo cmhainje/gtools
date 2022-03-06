@@ -16,6 +16,8 @@ def parse():
     ap.add_argument("--partition", default="all")
     ap.add_argument("--memory", default="50G")
     ap.add_argument("--jobtime", default="1-00:00:00")
+    ap.add_argument("--ntasks", default="25")
+    ap.add_argument("--exclusive", action="store_true")
     ap.add_argument("--gizmo", default="/home/chainje/gizmo-public/GIZMO")
     args = ap.parse_args()
 

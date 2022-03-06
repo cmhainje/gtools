@@ -4,8 +4,10 @@
 #SBATCH -t {{ job_t }}
 #SBATCH --mem {{ job_m }}
 #SBATCH --nodes=1
+{% if exclusive -%}
 #SBATCH --exclusive
-#SBATCH --ntasks-per-node=25
+{% endif -%}
+#SBATCH --ntasks-per-node={{ ntasks }}
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=all
 #SBATCH --mail-user=chainje@princeton.edu
