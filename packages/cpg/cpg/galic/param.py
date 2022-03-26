@@ -7,6 +7,15 @@ from astropy.cosmology import Planck13
 from astropy.constants import G
 from gtools.models.virial import Virial
 from gtools.models.halos import NFW
+from math import log
+
+
+def _fc(c):
+    return (
+        c
+        * (0.5 - 0.5 / pow(1 + c, 2) - log(1 + c) / (1 + c))
+        / pow(log(1 + c) - c / (1 + c), 2)
+    )
 
 
 def parse():
@@ -55,9 +64,9 @@ def process(args):
             raise ValueError("disk height unspecified")
 
         # from disk_scale and disk_height, compute lambda and DiskHeight
-        args.disk_spinfrac = args.Mfrac_disk  # spin fraction
+        args.disk_spinfrac = args.Mfrac_disk  # spin fraction j_d
         r200 = vir.compute_R_from_M(M_tot * u.M_sun).value
-        args.spin_param = args.disk_scale * 2 ** (0.5) / r200
+        args.spin_param = (2 ** (0.5)) * args.disk_scale * _fc(args.c) / r200
         args.disk_height = args.disk_height / args.disk_scale
 
     if args.n_bulge == 0 or args.M_bulge == 0:
