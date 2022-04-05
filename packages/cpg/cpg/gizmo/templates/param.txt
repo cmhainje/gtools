@@ -13,6 +13,12 @@
 InitCondFile	    {{ icpath }}
 OutputDir	        {{ output }}
 
+{% if dynfric -%}
+%---- Dynamical friction
+DynFricRadius     {{ df_radius }}
+DynFricLogLambda  {{ df_loglambda }}
+
+{% endif -%}
 %---- File formats (input and output)
 ICFormat                    3   % format of IC file: 1=unformatted (gadget) binary, 3=hdf5, 4=cluster
 SnapFormat                  3   % format of snapshots: 1=unformatted (gadget) binary, 3=hdf5 [Default=3]
