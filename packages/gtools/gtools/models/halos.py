@@ -15,6 +15,7 @@ def find_virial_radius(halo, v=None):
         lambda r: halo.average_enclosed_density(r) - rho_vir,
         x0=halo.r_s,
         x1=100,
+        bracket=[1e-5, 1e5],
     )
     if not res.converged:
         raise ValueError("Root finder failed to converge.")
@@ -147,7 +148,7 @@ class Hernquist:
 
     def enclosed_mass(self, r):
         x = r / self.r_s
-        return 2 * np.pi * self.rho_s * self.a ** 3 * x ** 2 / ((1 + x) ** 2)
+        return 2 * np.pi * self.rho_s * self.r_s ** 3 * x ** 2 / ((1 + x) ** 2)
 
     def total_mass(self):
         return 2 * np.pi * self.rho_s * self.r_s ** 3
@@ -190,3 +191,42 @@ class Hernquist:
             v = Virial(overdensity=200)
         nfw = self.to_NFW(v=v)
         return nfw.to_galic(v=v)
+
+
+def dutton_maccio(M, v=None):
+    if v is None:
+        v = Virial()
+    z = v.redshift
+    h = v.hubble.value / 100
+
+    if v.overdensity == 200:
+        b = -0.101 + 0.026 * z
+        a = 0.520 + (0.905 - 0.520) * np.exp(-0.617 * z ** 1.21)
+    else:
+        b = -0.097 + 0.024 * z
+        a = 0.537 + (1.025 - 0.537) * np.exp(-0.718 * z ** 1.08)
+
+    logc = a + b * np.log10(M / (1e12 * h))
+    return 10 ** logc
+
+
+def dutton_maccio_200(M, v=None):
+    if v is None:
+        v = Virial(overdensity=200)
+    z = v.redshift
+    h = v.hubble.value / 100
+    b = -0.101 + 0.026 * z
+    a = 0.520 + (0.905 - 0.520) * np.exp(-0.617 * z ** 1.21)
+    logc = a + b * np.log10(M / (1e12 * h))
+    return 10 ** logc
+
+
+def dutton_maccio_vir(M, v=None):
+    if v is None:
+        v = Virial()
+    z = v.redshift
+    h = v.hubble.value / 100
+    b = -0.097 + 0.024 * z
+    a = 0.537 + (1.025 - 0.537) * np.exp(-0.718 * z ** 1.08)
+    logc = a + b * np.log10(M / (1e12 * h))
+    return 10 ** logc
